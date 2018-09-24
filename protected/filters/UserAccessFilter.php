@@ -17,6 +17,70 @@ class UserAccessFilter extends CFilter {
         parent::preFilter($filterChain);
     }
     
+    protected function testToken() {
+        if (!function_exists('apache_request_headers')) {
+            function apache_request_headers() {
+                $arh = array();
+                $rx_http = '/\AHTTP_/';
+                foreach ($_SERVER as $key => $val) {
+                    if (preg_match($rx_http, $key)) {
+                        $arh_key = preg_replace($rx_http, '', $key);
+                        $rx_matches = array();
+                        $rx_matches = explode('_', $arh_key);
+                        if (count($rx_matches) > 0 && strlen($arh_key) > 2) {
+                            foreach ($rx_matches as $ak_key => $ak_val) {
+                                $rx_matches[$ak_key] = ucfirst($ak_val);
+                            }
+                            $arh_key = implode('_', $rx_matches);
+                        }
+                        $arh[$arh_key] = $val;
+                    }
+                }
+
+                return $arh;
+            }
+        }
+        
+        
+        $headers = apache_request_headers();
+        if (isset($headers['Authorization'])) {
+            $matches = array();
+            preg_match('/Token (.*)/', $headers['Authorization'], $matches);
+            if (isset($matches[1])) {
+                $token = $matches[1];
+                $userToken = UserTokens::model()->findByAttributes(array('token'=>$token));
+                if ($userToken != null)
+                    return true;
+            }
+        }
+        
+        $result = array('status'=>'401');
+        echo json_encode($result);
+        return false;
+    }
+    
+    private function apache_request_headers() {
+        $arh = array();
+        $rx_http = '/\AHTTP_/';
+        foreach ($_SERVER as $key => $val) {
+            if (preg_match($rx_http, $key)) {
+                $arh_key = preg_replace($rx_http, '', $key);
+                $rx_matches = array();
+                $rx_matches = explode('_', $arh_key);
+                if (count($rx_matches) > 0 && strlen($arh_key) > 2) {
+                    foreach ($rx_matches as $ak_key => $ak_val) {
+                        $rx_matches[$ak_key] = ucfirst($ak_val);
+                    }
+                    $arh_key = implode('_', $rx_matches);
+                }
+                $arh[$arh_key] = $val;
+            }
+        }
+        
+        return $arh;
+    }
+
+
     protected function testUser($data) {
         if (!isset($data['uniqueid'])) {
             $result = array('status'=>'400');

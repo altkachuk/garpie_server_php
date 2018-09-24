@@ -39,15 +39,7 @@ class ValidationController extends Controller
 		);
 	}
     
-    public function actionRequestCode() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['uniqueid'])) {
-            $result = array('status'=>'400', 'message'=>'empty uniqueid');
-            echo json_encode($result);
-            return;
-        }
-        $uniqueid = $data['uniqueid'];
+    public function actionRequestCode($uniqueid) {
         $code = rand(1000, 9999);
         
         $model = Codes::model()->findByAttributes(array('uniqueid'=>$uniqueid));
@@ -85,27 +77,11 @@ class ValidationController extends Controller
             )
         );*/
         
-        $result = array('status'=>'200', 'code'=>$code/*, 'sid'=>$message->sid*/);
+        $result = array('code'=>$code/*, 'sid'=>$message->sid*/);
         echo json_encode($result);
     }
     
-    public function actionToken() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['uniqueid'])) {
-            $result = array('status'=>'400', 'message'=>'empty uniqueid');
-            echo json_encode($result);
-            return;
-        }
-        $uniqueid = $data['uniqueid'];
-        
-        if (!isset($data['code'])) {
-            $result = array('status'=>'400', 'message'=>'empty code');
-            echo json_encode($result);
-            return;
-        }
-        $code = $data['code'];
-        
+    public function actionToken($uniqueid, $code) {        
         $codeModel = Codes::model()->findByAttributes(array('uniqueid'=>$uniqueid, 'code'=>$code));
         if ($codeModel == null) {
             $result = array('status'=>'666', 'message'=>'Code wrong');

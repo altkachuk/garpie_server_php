@@ -19,6 +19,6 @@ class UserAccessPostFilter extends UserAccessFilter {
     protected function preFilter($filterChain) {
         $data = json_decode(file_get_contents('php://input'), true);
         
-        return $this->testUser($data);
+        return $this->testToken();
     }
 }

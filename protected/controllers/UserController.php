@@ -18,6 +18,10 @@ class UserController extends Controller
 	{
 		return array(
 			'accessControl',
+            'postOnly + update',
+            array(
+                'application.filters.UserAccessPostFilter + update'
+            )
 		);
 	}
     
@@ -25,7 +29,7 @@ class UserController extends Controller
 	{
 		return array(
             array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('create',),
+				'actions'=>array('update',),
 				'users'=>array('*'),
 			),
 			array('deny',  // deny all users
@@ -36,28 +40,51 @@ class UserController extends Controller
     
     static $staticUniqueId = '+000000000000';
     
-    public function actionCreate($uniqueid, $name, $code) {
-        $codeModel = Codes::model()->findByAttributes(array('uniqueid'=>$uniqueid, 'code'=>$code));
-        if ($codeModel == null) {
-            $result = array('status'=>'666', 'message'=>'Code wrong');
-            echo json_encode($result);
-            return;
+    public function actionUpdate() {
+        $data = json_decode(file_get_contents('php://input'), true);
+ 
+        $user = $this->getUser();
+        foreach ($data as $key => $value) {
+            $user[$key] = $value;
         }
-        
-        $user = Users::model()->findByAttributes(array('uniqueid'=>$uniqueid));
-        
-        if (!$user) {
-            $user = new Users();
-        }
-        
-        $user->uniqueid = $uniqueid;
-        $user->name = $name;
-        $user->enabled = 1;
         $user->save();
-        
         echo json_encode($user->toObject());
     }
     
+    private function getUser() {
+        if (!function_exists('apache_request_headers')) {
+            function apache_request_headers() {
+                $arh = array();
+                $rx_http = '/\AHTTP_/';
+                foreach ($_SERVER as $key => $val) {
+                    if (preg_match($rx_http, $key)) {
+                        $arh_key = preg_replace($rx_http, '', $key);
+                        $rx_matches = array();
+                        $rx_matches = explode('_', $arh_key);
+                        if (count($rx_matches) > 0 && strlen($arh_key) > 2) {
+                            foreach ($rx_matches as $ak_key => $ak_val) {
+                                $rx_matches[$ak_key] = ucfirst($ak_val);
+                            }
+                            $arh_key = implode('_', $rx_matches);
+                        }
+                        $arh[$arh_key] = $val;
+                    }
+                }
+
+                return $arh;
+            }
+        }
+        
+        $headers = apache_request_headers();
+        $matches = array();
+        preg_match('/Token (.*)/', $headers['Authorization'], $matches);
+        $token = $matches[1];
+        $userToken = UserTokens::model()->findByAttributes(array('token'=>$token));
+        $user = Users::model()->findByPk($userToken->user_id);
+        return $user;
+    }
+
+
     public function create($data) {
         if (!isset($data['uniqueid'])) {
             $result = array('status'=>'400', 'message'=>'empty uniqueid');
