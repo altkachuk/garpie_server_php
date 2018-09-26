@@ -18,9 +18,6 @@ class ValidationController extends Controller
 			'accessControl',
             'postOnly + requestCode',
             'postOnly + token',
-            /*array(
-                'application.filters.UserAccessPostFilter - validate, garpieGetAll, userCreate, userGet'
-            )*/
 		);
 	}
     
@@ -76,7 +73,7 @@ class ValidationController extends Controller
                 'body' => $text
             )
         );*/
-        
+
         $result = array('code'=>$code/*, 'sid'=>$message->sid*/);
         echo json_encode($result);
     }
@@ -84,9 +81,8 @@ class ValidationController extends Controller
     public function actionToken($uniqueid, $code) {        
         $codeModel = Codes::model()->findByAttributes(array('uniqueid'=>$uniqueid, 'code'=>$code));
         if ($codeModel == null) {
-            $result = array('status'=>'666', 'message'=>'Code wrong');
-            echo json_encode($result);
-            return;
+            header("HTTP/1.0 002 Wrong Code");
+            exit;
         }
         
         $user = Users::model()->findByAttributes(array('uniqueid'=>$uniqueid));

@@ -54,8 +54,9 @@ class UserAccessFilter extends CFilter {
             }
         }
         
-        $result = array('status'=>'401');
-        echo json_encode($result);
+        header("HTTP/1.0 001 Unauthorized");
+        exit;
+        
         return false;
     }
     
