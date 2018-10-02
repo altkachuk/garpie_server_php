@@ -20,7 +20,7 @@ class UserController extends Controller
 			'accessControl',
             'postOnly + update',
             array(
-                'application.filters.UserAccessPostFilter + update'
+                'application.filters.UserAccessPostFilter + update, get'
             )
 		);
 	}
@@ -29,7 +29,7 @@ class UserController extends Controller
 	{
 		return array(
             array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('update',),
+				'actions'=>array('get', 'update',),
 				'users'=>array('*'),
 			),
 			array('deny',  // deny all users
@@ -48,6 +48,11 @@ class UserController extends Controller
             $user[$key] = $value;
         }
         $user->save();
+        echo json_encode($user->toObject());
+    }
+    
+    public function actionGet() {
+        $user = $this->getUser();
         echo json_encode($user->toObject());
     }
     
