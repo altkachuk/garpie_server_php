@@ -17,17 +17,39 @@ class SessionController extends Controller
 	{
 		return array(
 			'accessControl',
+            'postOnly + create',
+            array(
+                'application.filters.UserAccessPostFilter + create'
+            )
 		);
 	}
     
     public function accessRules()
 	{
 		return array(
+            array('allow',  // allow all users to perform 'index' and 'view' actions
+				'actions'=>array('create',),
+				'users'=>array('*'),
+			),
 			array('deny',  // deny all users
 				'users'=>array('*'),
 			),
 		);
 	}
+    
+    public function actionCreate() {
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $session = new Sessions();
+        foreach ($data as $key => $value) {
+            $session[$key] = $value;
+        }
+        $timestamp = $this->getTimestamp();
+        $session->time = $timestamp;
+        $session->save();
+        
+        echo json_encode($session->toObject());
+    }
     
     public function create($data, $timestamp) {
         $uniqueid = $data['uniqueid'];
@@ -244,5 +266,10 @@ class SessionController extends Controller
             'session_users'=>$session_users);
         
         echo json_encode($result);
+    }
+    
+    private function getTimestamp() {
+        $timestamp = microtime(true);
+        return $timestamp;
     }
 }

@@ -172,7 +172,8 @@ class SessionUsers extends CActiveRecord
     public function toObject() {
         $result = array(
             'id' => $this->id,
-            'unique_id' => $this->user->uniqueid,
+            'user_id' => $this->user_id,
+            'user' => $this->user->toObject(),
             'session_id' => $this->session_id,
             'garpie_id' => $this->garpie_id,
             'is_master' => $this->is_master,
@@ -180,13 +181,6 @@ class SessionUsers extends CActiveRecord
             'enabled' => $this->enabled,
             'uniqueid' => $this->user->uniqueid
         );
-        
-        if ($this->state > 0) {
-            $sessionUserLocation = $this->sessionUserLocations[count($this->sessionUserLocations)-1];
-            $result['latitude'] = $sessionUserLocation->latitude;
-            $result['longitude'] = $sessionUserLocation->longitude;
-            $result['altitude'] = $sessionUserLocation->altitude;
-        }
         
         return $result;
     }

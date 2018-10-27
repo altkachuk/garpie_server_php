@@ -36,7 +36,10 @@ class ValidationController extends Controller
 		);
 	}
     
-    public function actionRequestCode($uniqueid) {
+    public function actionRequestCode() {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $uniqueid = $data['uniqueid'];
+        
         $code = rand(1000, 9999);
         
         $model = Codes::model()->findByAttributes(array('uniqueid'=>$uniqueid));
@@ -78,7 +81,10 @@ class ValidationController extends Controller
         echo json_encode($result);
     }
     
-    public function actionToken($uniqueid, $code) {        
+    public function actionToken($code) {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $uniqueid = $data['uniqueid'];
+        
         $codeModel = Codes::model()->findByAttributes(array('uniqueid'=>$uniqueid, 'code'=>$code));
         if ($codeModel == null) {
             header("HTTP/1.0 002 Wrong Code");

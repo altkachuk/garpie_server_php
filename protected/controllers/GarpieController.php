@@ -23,11 +23,24 @@ class GarpieController extends Controller
     public function accessRules()
 	{
 		return array(
+            array('allow',
+                'actions'=>array(
+                    'getAll'
+                ),
+                'users'=>array('*')
+            ),
 			array('deny',  // deny all users
 				'users'=>array('*'),
 			),
 		);
 	}
+    
+    public function actionGetAll() {
+        $garpies = Garpies::model()->findAllPredefined();
+        
+        $result = array('garpies'=>$garpies);
+        echo json_encode($garpies);
+    }
     
     public function getAll() {
         $garpies = Garpies::model()->findAllPredefined();

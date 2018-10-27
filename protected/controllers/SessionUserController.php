@@ -17,17 +17,69 @@ class SessionUserController extends Controller
 	{
 		return array(
 			'accessControl',
+            'postOnly + create',
+            array(
+                'application.filters.UserAccessPostFilter + create, update'
+            )
 		);
 	}
     
     public function accessRules()
 	{
 		return array(
+            array('allow',  // allow all users to perform 'index' and 'view' actions
+				'actions'=>array('create','update',),
+				'users'=>array('*'),
+			),
 			array('deny',  // deny all users
 				'users'=>array('*'),
 			),
 		);
 	}
+    
+    public function actionCreate($session_id) {
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $result = array();
+        
+        $user = $this->getUser();
+        $sesionUser = new SessionUsers();
+        $sesionUser->user_id = $user->id;
+        $sesionUser->session_id = $session_id;
+        $sesionUser->is_master = 1;
+        $sesionUser->state = 1;
+        $sesionUser->save();
+        $result[] = $sesionUser->toObject();
+        
+        foreach ($data as $uniqueid) {
+            $user = Users::model()->findByUniqueid($uniqueid);
+            if ($user == null) {
+                $user = new Users();
+                $user->uniqueid = $uniqueid;
+                $user->save();
+            }
+            $sesionUser = new SessionUsers();
+            $sesionUser->user_id = $user->id;
+            $sesionUser->session_id = $session_id;
+            $sesionUser->save();
+            $result[] = $sesionUser->toObject();
+        }
+        
+        echo json_encode($result);
+    }
+    
+    public function actionUpdate() {
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $sessionUser = SessionUsers::model()->findByPk($data['id']);
+        foreach ($data as $key => $value) {
+            if ($key != 'user') {
+                $sessionUser[$key] = $value;
+            }
+        }
+        $sessionUser->save();
+        echo json_encode($sessionUser->toObject());
+    }
     
     public function accept($data, $timestamp) {
         $uniqueid = $data['uniqueid'];
@@ -423,6 +475,41 @@ class SessionUserController extends Controller
         
         $result = array('status'=>'200', 'session_users'=>$session_users);
         echo json_encode($result);
+    }
+    
+    
+    
+    private function getUser() {
+        if (!function_exists('apache_request_headers')) {
+            function apache_request_headers() {
+                $arh = array();
+                $rx_http = '/\AHTTP_/';
+                foreach ($_SERVER as $key => $val) {
+                    if (preg_match($rx_http, $key)) {
+                        $arh_key = preg_replace($rx_http, '', $key);
+                        $rx_matches = array();
+                        $rx_matches = explode('_', $arh_key);
+                        if (count($rx_matches) > 0 && strlen($arh_key) > 2) {
+                            foreach ($rx_matches as $ak_key => $ak_val) {
+                                $rx_matches[$ak_key] = ucfirst($ak_val);
+                            }
+                            $arh_key = implode('_', $rx_matches);
+                        }
+                        $arh[$arh_key] = $val;
+                    }
+                }
+
+                return $arh;
+            }
+        }
+        
+        $headers = apache_request_headers();
+        $matches = array();
+        preg_match('/Token (.*)/', $headers['Authorization'], $matches);
+        $token = $matches[1];
+        $userToken = UserTokens::model()->findByAttributes(array('token'=>$token));
+        $user = Users::model()->findByPk($userToken->user_id);
+        return $user;
     }
     
 }
