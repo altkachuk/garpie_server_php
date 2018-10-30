@@ -168,6 +168,19 @@ class SessionUsers extends CActiveRecord
         
         $command->execute();
     }
+    
+    private function getLastSessionUserLocation($session_user_id) {
+        $query = 'SELECT * FROM session_user_locations WHERE session_user_id = :session_user_id'
+                . ' AND id = (SELECT max(id) FROM session_user_locations)';
+        
+        $command = Yii::app()->db->cache(0)->createCommand($query);
+        $command = Yii::app()->db->createCommand($query);
+        $command->bindValue(':session_user_id', $session_user_id, PDO::PARAM_INT);
+        $sessionUseLocation = $command->query();
+        $sessionUseLocation = $sessionUseLocation->read();
+        
+        return $sessionUseLocation;
+    }
 
     public function toObject() {
         $result = array(
@@ -179,8 +192,13 @@ class SessionUsers extends CActiveRecord
             'is_master' => $this->is_master,
             'state' => $this->state,
             'enabled' => $this->enabled,
-            'uniqueid' => $this->user->uniqueid
+            'uniqueid' => $this->user->uniqueid,
         );
+        
+        $sessionUserLocation = $this->getLastSessionUserLocation($this->id);
+        if ($sessionUserLocation != null) {
+            $result['session_user_location'] = $sessionUserLocation;
+        }
         
         return $result;
     }

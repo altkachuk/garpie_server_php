@@ -95,7 +95,9 @@ class ValidationController extends Controller
         if (!$user) {
             $user = new Users();
         }
-        $user->uniqueid = $uniqueid;
+        foreach ($data as $key => $value) {
+            $user[$key] = $data[$key];
+        }
         $user->enabled = 1;
         $user->save();
         

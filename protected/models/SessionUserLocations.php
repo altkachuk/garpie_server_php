@@ -72,6 +72,8 @@ class SessionUserLocations extends CActiveRecord
     public function toObject()
     {
         $result = array(
+            'id' => $this->id,
+            'session_user_id' => $this->session_user_id,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'altitude' => $this->altitude);

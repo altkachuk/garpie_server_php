@@ -59,7 +59,7 @@ class SessionUserController extends Controller
                 $user->save();
             }
             $sesionUser = new SessionUsers();
-            $sesionUser->user_id = $user->id;
+            $sesionUser->user_id = $user['id'];
             $sesionUser->session_id = $session_id;
             $sesionUser->save();
             $result[] = $sesionUser->toObject();
